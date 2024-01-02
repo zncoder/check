@@ -66,12 +66,13 @@ func V[T any](v T, err error) valueError[T] {
 }
 
 type valueError[T any] struct {
-	v   T
-	err error
+	v       T
+	err     error
+	ignored bool
 }
 
 func (v valueError[T]) Panic(msg string, args ...any) T {
-	if v.err != nil {
+	if !v.ignored && v.err != nil {
 		slog.Info(msg, append(args, "err", v.err))
 		panic(v.err)
 	}
@@ -79,13 +80,14 @@ func (v valueError[T]) Panic(msg string, args ...any) T {
 }
 
 func (v valueError[T]) Fatal(msg string, args ...any) T {
-	if v.err != nil {
+	if !v.ignored && v.err != nil {
 		slog.Info(msg, append(args, "err", v.err))
 		os.Exit(1)
 	}
 	return v.v
 }
 
-func (v valueError[T]) Ignore() T {
-	return v.v
+func (v valueError[T]) Ignore() valueError[T] {
+	v.ignored = true
+	return v
 }
