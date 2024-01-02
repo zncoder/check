@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func Nilf(err error, format string, args ...interface{}) {
+func Nilf(err error, format string, args ...any) {
 	if err == nil {
 		return
 	}
@@ -24,7 +24,7 @@ func Nil(err error) {
 	panic(s)
 }
 
-func OKf(ok bool, format string, args ...interface{}) {
+func OKf(ok bool, format string, args ...any) {
 	if ok {
 		return
 	}
@@ -42,11 +42,20 @@ func OK(ok bool) {
 	panic(s)
 }
 
-func Fatalf(skip int, ok bool, format string, args ...interface{}) {
+func Fatalf(skip int, ok bool, format string, args ...any) {
 	if ok {
 		return
 	}
 	s := fmt.Sprintf("ASSERT false: %s", fmt.Sprintf(format, args...))
 	log.Output(skip+1, s)
 	os.Exit(1)
+}
+
+func V[T any](v T, err error) T {
+	if err == nil {
+		return v
+	}
+	s := fmt.Sprintf("ASSERT err:%v", err)
+	log.Output(2, s)
+	panic(s)
 }
