@@ -87,7 +87,7 @@ func (v valueError[T]) Fatal(msg string, args ...any) T {
 	return v.v
 }
 
-func (v valueError[T]) Ignore() valueError[T] {
-	v.ignored = true
+func (v valueError[T]) Ignore(ignore bool) valueError[T] {
+	v.ignored = ignore
 	return v
 }
