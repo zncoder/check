@@ -12,7 +12,6 @@ func Nilf(err error, format string, args ...any) {
 		return
 	}
 	s := fmt.Sprintf("ASSERT err:%v %s", err, fmt.Sprintf(format, args...))
-	log.Output(2, s)
 	panic(s)
 }
 
@@ -21,7 +20,6 @@ func Nil(err error) {
 		return
 	}
 	s := fmt.Sprintf("ASSERT err:%v", err)
-	log.Output(2, s)
 	panic(s)
 }
 
@@ -30,7 +28,6 @@ func OKf(ok bool, format string, args ...any) {
 		return
 	}
 	s := fmt.Sprintf("ASSERT: %s", fmt.Sprintf(format, args...))
-	log.Output(2, s)
 	panic(s)
 }
 
@@ -39,7 +36,6 @@ func OK(ok bool) {
 		return
 	}
 	s := "ASSERT false"
-	log.Output(2, s)
 	panic(s)
 }
 
@@ -57,7 +53,6 @@ func Must[T any](v T, err error) T {
 		return v
 	}
 	s := fmt.Sprintf("ASSERT err:%v", err)
-	log.Output(2, s)
 	panic(s)
 }
 
@@ -73,7 +68,7 @@ type valueError[T any] struct {
 
 func (v valueError[T]) Panic(msg string, args ...any) T {
 	if !v.ignored && v.err != nil {
-		slog.Info(msg, append(args, "err", v.err)...)
+		slog.Error(msg, append([]any{"err", v.err}, args...)...)
 		panic(v.err)
 	}
 	return v.v
@@ -81,7 +76,7 @@ func (v valueError[T]) Panic(msg string, args ...any) T {
 
 func (v valueError[T]) Fatal(msg string, args ...any) T {
 	if !v.ignored && v.err != nil {
-		slog.Info(msg, append(args, "err", v.err)...)
+		slog.Error(msg, append([]any{"err", v.err}, args...)...)
 		os.Exit(1)
 	}
 	return v.v
@@ -111,7 +106,7 @@ type valueOK[T any] struct {
 
 func (v valueOK[T]) Panic(msg string, args ...any) T {
 	if !v.ignored && !v.ok {
-		slog.Info(msg, args...)
+		slog.Error(msg, args...)
 		panic(false)
 	}
 	return v.v
@@ -119,7 +114,7 @@ func (v valueOK[T]) Panic(msg string, args ...any) T {
 
 func (v valueOK[T]) Fatal(msg string, args ...any) T {
 	if !v.ignored && !v.ok {
-		slog.Info(msg, args...)
+		slog.Error(msg, args...)
 		os.Exit(1)
 	}
 	return v.v
@@ -148,14 +143,14 @@ type checkE struct {
 
 func (v checkE) Panic(msg string, args ...any) {
 	if !v.ignored && v.err != nil {
-		slog.Info(msg, append(args, "err", v.err)...)
+		slog.Error(msg, append([]any{"err", v.err}, args...)...)
 		panic(v.err)
 	}
 }
 
 func (v checkE) Fatal(msg string, args ...any) {
 	if !v.ignored && v.err != nil {
-		slog.Info(msg, append(args, "err", v.err)...)
+		slog.Error(msg, append([]any{"err", v.err}, args...)...)
 		os.Exit(1)
 	}
 }
