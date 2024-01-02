@@ -3,6 +3,7 @@ package assert
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 )
 
@@ -51,11 +52,36 @@ func Fatalf(skip int, ok bool, format string, args ...any) {
 	os.Exit(1)
 }
 
-func V[T any](v T, err error) T {
+func Must[T any](v T, err error) T {
 	if err == nil {
 		return v
 	}
 	s := fmt.Sprintf("ASSERT err:%v", err)
 	log.Output(2, s)
 	panic(s)
+}
+
+func V[T any](v T, err error) valueError[T] {
+	return valueError[T]{v: v, err: err}
+}
+
+type valueError[T any] struct {
+	v   T
+	err error
+}
+
+func (v valueError[T]) Panic(msg string, args ...any) T {
+	if v.err != nil {
+		slog.Info(msg, append(args, "err", v.err))
+		panic(v.err)
+	}
+	return v.v
+}
+
+func (v valueError[T]) Fatal(msg string, args ...any) T {
+	if v.err != nil {
+		slog.Info(msg, append(args, "err", v.err))
+		os.Exit(1)
+	}
+	return v.v
 }
