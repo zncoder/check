@@ -73,7 +73,7 @@ type valueError[T any] struct {
 
 func (v valueError[T]) Panic(msg string, args ...any) T {
 	if !v.ignored && v.err != nil {
-		slog.Info(msg, append(args, "err", v.err))
+		slog.Info(msg, append(args, "err", v.err)...)
 		panic(v.err)
 	}
 	return v.v
@@ -81,7 +81,7 @@ func (v valueError[T]) Panic(msg string, args ...any) T {
 
 func (v valueError[T]) Fatal(msg string, args ...any) T {
 	if !v.ignored && v.err != nil {
-		slog.Info(msg, append(args, "err", v.err))
+		slog.Info(msg, append(args, "err", v.err)...)
 		os.Exit(1)
 	}
 	return v.v
@@ -90,4 +90,83 @@ func (v valueError[T]) Fatal(msg string, args ...any) T {
 func (v valueError[T]) Ignore(ignore bool) valueError[T] {
 	v.ignored = ignore
 	return v
+}
+
+func (v valueError[T]) Must() T {
+	if !v.ignored && v.err != nil {
+		panic(v.err)
+	}
+	return v.v
+}
+
+func K[T any](v T, ok bool) valueOK[T] {
+	return valueOK[T]{v: v, ok: ok}
+}
+
+type valueOK[T any] struct {
+	v       T
+	ok      bool
+	ignored bool
+}
+
+func (v valueOK[T]) Panic(msg string, args ...any) T {
+	if !v.ignored && !v.ok {
+		slog.Info(msg, args...)
+		panic(false)
+	}
+	return v.v
+}
+
+func (v valueOK[T]) Fatal(msg string, args ...any) T {
+	if !v.ignored && !v.ok {
+		slog.Info(msg, args...)
+		os.Exit(1)
+	}
+	return v.v
+}
+
+func (v valueOK[T]) Ignore(ignore bool) valueOK[T] {
+	v.ignored = ignore
+	return v
+}
+
+func (v valueOK[T]) Must() T {
+	if !v.ignored && !v.ok {
+		panic(false)
+	}
+	return v.v
+}
+
+func E(err error) checkE {
+	return checkE{err: err}
+}
+
+type checkE struct {
+	err     error
+	ignored bool
+}
+
+func (v checkE) Panic(msg string, args ...any) {
+	if !v.ignored && v.err != nil {
+		slog.Info(msg, append(args, "err", v.err)...)
+		panic(v.err)
+	}
+}
+
+func (v checkE) Fatal(msg string, args ...any) {
+	if !v.ignored && v.err != nil {
+		slog.Info(msg, append(args, "err", v.err)...)
+		os.Exit(1)
+	}
+}
+
+func (v checkE) Ignore(ignore bool) checkE {
+	v.ignored = ignore
+	return v
+}
+
+func (v checkE) Must() {
+	if !v.ignored && v.err != nil {
+		panic(v.err)
+	}
 }
