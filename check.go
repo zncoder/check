@@ -9,6 +9,10 @@ func Vp[T any](v T, err error) T {
 	return V(v, err).V()
 }
 
+func Ep(err error) {
+	E(err).M()
+}
+
 func Tp(ok bool) {
 	T(ok).M()
 }
