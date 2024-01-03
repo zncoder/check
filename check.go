@@ -1,4 +1,4 @@
-package assert
+package check
 
 import (
 	"log/slog"
