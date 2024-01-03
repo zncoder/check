@@ -1,59 +1,16 @@
 package assert
 
 import (
-	"fmt"
-	"log"
 	"log/slog"
 	"os"
 )
 
-func Nilf(err error, format string, args ...any) {
-	if err == nil {
-		return
-	}
-	s := fmt.Sprintf("ASSERT err:%v %s", err, fmt.Sprintf(format, args...))
-	panic(s)
-}
-
-func Nil(err error) {
-	if err == nil {
-		return
-	}
-	s := fmt.Sprintf("ASSERT err:%v", err)
-	panic(s)
-}
-
-func OKf(ok bool, format string, args ...any) {
-	if ok {
-		return
-	}
-	s := fmt.Sprintf("ASSERT: %s", fmt.Sprintf(format, args...))
-	panic(s)
+func Must[T any](v T, err error) T {
+	return V(v, err).Must()
 }
 
 func OK(ok bool) {
-	if ok {
-		return
-	}
-	s := "ASSERT false"
-	panic(s)
-}
-
-func Fatalf(skip int, ok bool, format string, args ...any) {
-	if ok {
-		return
-	}
-	s := fmt.Sprintf("ASSERT false: %s", fmt.Sprintf(format, args...))
-	log.Output(skip+1, s)
-	os.Exit(1)
-}
-
-func Must[T any](v T, err error) T {
-	if err == nil {
-		return v
-	}
-	s := fmt.Sprintf("ASSERT err:%v", err)
-	panic(s)
+	T(ok).Must()
 }
 
 func V[T any](v T, err error) valueError[T] {
@@ -163,5 +120,39 @@ func (v checkE) Ignore(ignore bool) checkE {
 func (v checkE) Must() {
 	if !v.ignored && v.err != nil {
 		panic(v.err)
+	}
+}
+
+func T(ok bool) checkT {
+	return checkT{ok: ok}
+}
+
+type checkT struct {
+	ok      bool
+	ignored bool
+}
+
+func (v checkT) Panic(msg string, args ...any) {
+	if !v.ignored && !v.ok {
+		slog.Error(msg, args...)
+		panic(false)
+	}
+}
+
+func (v checkT) Fatal(msg string, args ...any) {
+	if !v.ignored && !v.ok {
+		slog.Error(msg, args...)
+		os.Exit(1)
+	}
+}
+
+func (v checkT) Ignore(ignore bool) checkT {
+	v.ignored = ignore
+	return v
+}
+
+func (v checkT) Must() {
+	if !v.ignored && !v.ok {
+		panic(false)
 	}
 }
