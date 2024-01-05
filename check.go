@@ -17,6 +17,10 @@ func Tp(ok bool) {
 	T(ok).M()
 }
 
+func L(msg string, args ...any) {
+	slog.Info(msg, args...)
+}
+
 func V[T any](v T, err error) valueError[T] {
 	return valueError[T]{v: v, err: err}
 }
