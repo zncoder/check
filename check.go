@@ -57,6 +57,10 @@ func logFalse(la logAction, args []any) {
 	}
 }
 
+func L(msg string, args ...any) {
+	slog.Info(msg, args...)
+}
+
 // V captures a value and an error. Usage:
 //
 //	V(os.CreateFile(filename, 0600)).P("open file", "filename", filename), or
