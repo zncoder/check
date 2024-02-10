@@ -61,6 +61,16 @@ func L(msg string, args ...any) {
 	slog.Info(msg, args...)
 }
 
+func P(msg string, args ...any) {
+	slog.Error(msg, args...)
+	panic(msg)
+}
+
+func F(msg string, args ...any) {
+	slog.Error(msg, args...)
+	os.Exit(1)
+}
+
 // V captures a value and an error. Usage:
 //
 //	V(os.CreateFile(filename, 0600)).P("open file", "filename", filename), or
