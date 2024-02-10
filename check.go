@@ -113,6 +113,11 @@ func K[T any](v T, ok bool) valueOK[T] {
 	return valueOK[T]{v: v, ok: ok}
 }
 
+// NK captures a value and not of a bool.
+func NK[T any](v T, ok bool) valueOK[T] {
+	return valueOK[T]{v: v, ok: !ok}
+}
+
 type valueOK[T any] struct {
 	v      T
 	ok     bool
