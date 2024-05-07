@@ -105,11 +105,11 @@ func (v valueError[T]) F(args ...any) T {
 }
 
 // L logs on error.
-func (v valueError[T]) L(args ...any) T {
+func (v valueError[T]) L(args ...any) (T, bool) {
 	if !v.silent && v.err != nil {
 		logErr(toLog, v.err, args)
 	}
-	return v.v
+	return v.v, v.err == nil
 }
 
 // S ignores error.
@@ -143,11 +143,11 @@ func (v valueOK[T]) F(args ...any) T {
 	return v.v
 }
 
-func (v valueOK[T]) L(args ...any) T {
+func (v valueOK[T]) L(args ...any) (T, bool) {
 	if !v.silent && !v.ok {
 		logFalse(toLog, args)
 	}
-	return v.v
+	return v.v, v.ok
 }
 
 func (v valueOK[T]) S(silent bool) valueOK[T] {
@@ -177,10 +177,11 @@ func (v checkE) F(args ...any) {
 	}
 }
 
-func (v checkE) L(args ...any) {
+func (v checkE) L(args ...any) bool {
 	if !v.silent && v.err != nil {
 		logErr(toLog, v.err, args)
 	}
+	return v.err == nil
 }
 
 func (v checkE) S(silent bool) checkE {
@@ -210,10 +211,11 @@ func (v checkT) F(args ...any) {
 	}
 }
 
-func (v checkT) L(args ...any) {
+func (v checkT) L(args ...any) bool {
 	if !v.silent && !v.ok {
 		logFalse(toLog, args)
 	}
+	return v.ok
 }
 
 func (v checkT) S(silent bool) checkT {
