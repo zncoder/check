@@ -1,6 +1,7 @@
 package check
 
 import (
+	"errors"
 	"log/slog"
 	"os"
 )
@@ -161,31 +162,41 @@ func E(err error) checkE {
 }
 
 type checkE struct {
-	err    error
-	silent bool
+	err error
 }
 
 func (v checkE) P(args ...any) {
-	if !v.silent && v.err != nil {
+	if v.err != nil {
 		logErr(toPanic, v.err, args)
 	}
 }
 
 func (v checkE) F(args ...any) {
-	if !v.silent && v.err != nil {
+	if v.err != nil {
 		logErr(toFatal, v.err, args)
 	}
 }
 
 func (v checkE) L(args ...any) bool {
-	if !v.silent && v.err != nil {
+	if v.err != nil {
 		logErr(toLog, v.err, args)
 	}
 	return v.err == nil
 }
 
 func (v checkE) S(silent bool) checkE {
-	v.silent = silent
+	return checkE{}
+}
+
+func (v checkE) I(errs ...error) checkE {
+	if v.err == nil {
+		return v
+	}
+	for _, err := range errs {
+		if errors.Is(v.err, err) {
+			return checkE{}
+		}
+	}
 	return v
 }
 
