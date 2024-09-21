@@ -1,6 +1,7 @@
 package check
 
 import (
+	"errors"
 	"log/slog"
 	"os"
 )
@@ -105,11 +106,11 @@ func (v valueError[T]) F(args ...any) T {
 }
 
 // L logs on error.
-func (v valueError[T]) L(args ...any) T {
+func (v valueError[T]) L(args ...any) bool {
 	if !v.silent && v.err != nil {
 		logErr(toLog, v.err, args)
 	}
-	return v.v
+	return v.err == nil
 }
 
 // S ignores error.
@@ -143,11 +144,11 @@ func (v valueOK[T]) F(args ...any) T {
 	return v.v
 }
 
-func (v valueOK[T]) L(args ...any) T {
+func (v valueOK[T]) L(args ...any) bool {
 	if !v.silent && !v.ok {
 		logFalse(toLog, args)
 	}
-	return v.v
+	return v.ok
 }
 
 func (v valueOK[T]) S(silent bool) valueOK[T] {
@@ -161,30 +162,41 @@ func E(err error) checkE {
 }
 
 type checkE struct {
-	err    error
-	silent bool
+	err error
 }
 
 func (v checkE) P(args ...any) {
-	if !v.silent && v.err != nil {
+	if v.err != nil {
 		logErr(toPanic, v.err, args)
 	}
 }
 
 func (v checkE) F(args ...any) {
-	if !v.silent && v.err != nil {
+	if v.err != nil {
 		logErr(toFatal, v.err, args)
 	}
 }
 
-func (v checkE) L(args ...any) {
-	if !v.silent && v.err != nil {
+func (v checkE) L(args ...any) bool {
+	if v.err != nil {
 		logErr(toLog, v.err, args)
 	}
+	return v.err == nil
 }
 
 func (v checkE) S(silent bool) checkE {
-	v.silent = silent
+	return checkE{}
+}
+
+func (v checkE) I(errs ...error) checkE {
+	if v.err == nil {
+		return v
+	}
+	for _, err := range errs {
+		if errors.Is(v.err, err) {
+			return checkE{}
+		}
+	}
 	return v
 }
 
@@ -210,10 +222,11 @@ func (v checkT) F(args ...any) {
 	}
 }
 
-func (v checkT) L(args ...any) {
+func (v checkT) L(args ...any) bool {
 	if !v.silent && !v.ok {
 		logFalse(toLog, args)
 	}
+	return v.ok
 }
 
 func (v checkT) S(silent bool) checkT {
