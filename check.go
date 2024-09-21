@@ -78,11 +78,11 @@ func F(msg string, args ...any) {
 //	V(os.CreateFile(filename, 0600)).P(), or
 //	V(os.CreateFile(filename, 0600)).F("open file", "filename", filename)
 //	V(os.CreateFile(filename, 0600)).F()
-func V[T any](v T, err error) valueError[T] {
-	return valueError[T]{v: v, err: err}
+func V[T any](v T, err error) valueE[T] {
+	return valueE[T]{v: v, err: err}
 }
 
-type valueError[T any] struct {
+type valueE[T any] struct {
 	v      T
 	err    error
 	silent bool
@@ -90,7 +90,7 @@ type valueError[T any] struct {
 
 // P panics on error. If args is set, args[0] must be a string,
 // and the rest args are args to slog.Error.
-func (v valueError[T]) P(args ...any) T {
+func (v valueE[T]) P(args ...any) T {
 	if !v.silent && v.err != nil {
 		logErr(toPanic, v.err, args)
 	}
@@ -98,7 +98,7 @@ func (v valueError[T]) P(args ...any) T {
 }
 
 // F exits on error.
-func (v valueError[T]) F(args ...any) T {
+func (v valueE[T]) F(args ...any) T {
 	if !v.silent && v.err != nil {
 		logErr(toFatal, v.err, args)
 	}
@@ -106,13 +106,13 @@ func (v valueError[T]) F(args ...any) T {
 }
 
 // L logs on error.
-func (v valueError[T]) L(args ...any) bool {
+func (v valueE[T]) L(args ...any) bool {
 	_, ok := v.K(args...)
 	return ok
 }
 
 // K returns value and ok
-func (v valueError[T]) K(args ...any) (T, bool) {
+func (v valueE[T]) K(args ...any) (T, bool) {
 	if !v.silent && v.err != nil {
 		logErr(toLog, v.err, args)
 	}
@@ -120,8 +120,22 @@ func (v valueError[T]) K(args ...any) (T, bool) {
 }
 
 // S ignores error.
-func (v valueError[T]) S(silent bool) valueError[T] {
-	v.silent = silent
+func (v valueE[T]) S() valueE[T] {
+	v.silent = true
+	return v
+}
+
+// I ignores error if it is one of errs.
+func (v valueE[T]) I(errs ...error) valueE[T] {
+	if v.err == nil {
+		return v
+	}
+	for _, err := range errs {
+		if errors.Is(v.err, err) {
+			v.err = nil
+			return v
+		}
+	}
 	return v
 }
 
@@ -162,8 +176,8 @@ func (v valueOK[T]) K(args ...any) (T, bool) {
 	return v.v, v.ok
 }
 
-func (v valueOK[T]) S(silent bool) valueOK[T] {
-	v.silent = silent
+func (v valueOK[T]) S() valueOK[T] {
+	v.silent = true
 	return v
 }
 
@@ -173,30 +187,32 @@ func E(err error) checkE {
 }
 
 type checkE struct {
-	err error
+	silent bool
+	err    error
 }
 
 func (v checkE) P(args ...any) {
-	if v.err != nil {
+	if !v.silent && v.err != nil {
 		logErr(toPanic, v.err, args)
 	}
 }
 
 func (v checkE) F(args ...any) {
-	if v.err != nil {
+	if !v.silent && v.err != nil {
 		logErr(toFatal, v.err, args)
 	}
 }
 
 func (v checkE) L(args ...any) bool {
-	if v.err != nil {
+	if !v.silent && v.err != nil {
 		logErr(toLog, v.err, args)
 	}
 	return v.err == nil
 }
 
-func (v checkE) S(silent bool) checkE {
-	return checkE{}
+func (v checkE) S() checkE {
+	v.silent = true
+	return v
 }
 
 func (v checkE) I(errs ...error) checkE {
@@ -205,7 +221,8 @@ func (v checkE) I(errs ...error) checkE {
 	}
 	for _, err := range errs {
 		if errors.Is(v.err, err) {
-			return checkE{}
+			v.err = nil
+			return v
 		}
 	}
 	return v
@@ -240,7 +257,7 @@ func (v checkT) L(args ...any) bool {
 	return v.ok
 }
 
-func (v checkT) S(silent bool) checkT {
-	v.silent = silent
+func (v checkT) S() checkT {
+	v.silent = true
 	return v
 }
