@@ -125,8 +125,11 @@ func (v valueE[T]) S() valueE[T] {
 	return v
 }
 
-// I ignores error if it is one of errs.
+// I ignores error if it is one of errs or errs is empty.
 func (v valueE[T]) I(errs ...error) valueE[T] {
+	if len(errs) == 0 {
+		v.err = nil
+	}
 	if v.err == nil {
 		return v
 	}
@@ -216,6 +219,9 @@ func (v checkE) S() checkE {
 }
 
 func (v checkE) I(errs ...error) checkE {
+	if len(errs) == 0 {
+		v.err = nil
+	}
 	if v.err == nil {
 		return v
 	}
