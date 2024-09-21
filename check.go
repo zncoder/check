@@ -120,8 +120,10 @@ func (v valueE[T]) K(args ...any) (T, bool) {
 }
 
 // S ignores error.
-func (v valueE[T]) S() valueE[T] {
-	v.silent = true
+func (v valueE[T]) S(silent ...bool) valueE[T] {
+	if silent == nil || len(silent) > 0 && silent[0] {
+		v.silent = true
+	}
 	return v
 }
 
@@ -179,8 +181,10 @@ func (v valueOK[T]) K(args ...any) (T, bool) {
 	return v.v, v.ok
 }
 
-func (v valueOK[T]) S() valueOK[T] {
-	v.silent = true
+func (v valueOK[T]) S(silent ...bool) valueOK[T] {
+	if silent == nil || len(silent) > 0 && silent[0] {
+		v.silent = true
+	}
 	return v
 }
 
@@ -213,8 +217,10 @@ func (v checkE) L(args ...any) bool {
 	return v.err == nil
 }
 
-func (v checkE) S() checkE {
-	v.silent = true
+func (v checkE) S(silent ...bool) checkE {
+	if silent == nil || len(silent) > 0 && silent[0] {
+		v.silent = true
+	}
 	return v
 }
 
@@ -263,7 +269,9 @@ func (v checkT) L(args ...any) bool {
 	return v.ok
 }
 
-func (v checkT) S() checkT {
-	v.silent = true
+func (v checkT) S(silent ...bool) checkT {
+	if silent == nil || len(silent) > 0 && silent[0] {
+		v.silent = true
+	}
 	return v
 }
