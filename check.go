@@ -107,10 +107,16 @@ func (v valueError[T]) F(args ...any) T {
 
 // L logs on error.
 func (v valueError[T]) L(args ...any) bool {
+	_, ok := v.K(args...)
+	return ok
+}
+
+// K returns value and ok
+func (v valueError[T]) K(args ...any) (T, bool) {
 	if !v.silent && v.err != nil {
 		logErr(toLog, v.err, args)
 	}
-	return v.err == nil
+	return v.v, v.err == nil
 }
 
 // S ignores error.
@@ -145,10 +151,15 @@ func (v valueOK[T]) F(args ...any) T {
 }
 
 func (v valueOK[T]) L(args ...any) bool {
+	_, ok := v.K(args...)
+	return ok
+}
+
+func (v valueOK[T]) K(args ...any) (T, bool) {
 	if !v.silent && !v.ok {
 		logFalse(toLog, args)
 	}
-	return v.ok
+	return v.v, v.ok
 }
 
 func (v valueOK[T]) S(silent bool) valueOK[T] {
