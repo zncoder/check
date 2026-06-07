@@ -15,6 +15,19 @@ const (
 	toLog
 )
 
+var slogLevel slog.LevelVar
+
+func init() {
+	slogLevel.Set(slog.LevelWarn)
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: &slogLevel,
+	})))
+}
+
+func EnableInfo() {
+	slogLevel.Set(slog.LevelInfo)
+}
+
 func (la logAction) String() string {
 	switch la {
 	case toPanic:
