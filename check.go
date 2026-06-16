@@ -15,6 +15,12 @@ const (
 	toLog
 )
 
+func init() {
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		AddSource: true,
+	})))
+}
+
 func (la logAction) String() string {
 	switch la {
 	case toPanic:
