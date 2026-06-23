@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 type logAction int
@@ -20,10 +21,12 @@ func init() {
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 		AddSource: true,
 		ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
-			// Remove the directory from the source's filename.
 			if a.Key == slog.SourceKey {
 				source := a.Value.Any().(*slog.Source)
-				source.File = filepath.Base(source.File)
+				fn, file, line := callerInfo(7)
+				if line != 0 {
+					source.Function, source.File, source.Line = fn, file, line
+				}
 			}
 			return a
 		},
@@ -71,6 +74,15 @@ func logFalse(la logAction, args []any) {
 	case toFatal:
 		os.Exit(1)
 	}
+}
+
+func callerInfo(skip int) (fn, file string, line int) {
+	var pcs [1]uintptr
+	if runtime.Callers(skip+2, pcs[:]) == 0 {
+		return "", "", 0
+	}
+	frame, _ := runtime.CallersFrames(pcs[:]).Next()
+	return frame.Function, filepath.Base(frame.File), frame.Line
 }
 
 func L(msg string, args ...any) {
